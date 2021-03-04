@@ -1,66 +1,38 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 17 17:35:05 2021
+Created on Thu Mar  4 09:00:27 2021
 
-@author: kali
+@author: VED DHARKAR
 """
 
-#! /usr/bin/python3
-import pennylane as qml
-from pennylane import numpy as np
-import sys
+from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit
+from numpy import pi
+import qiskit as qk
 
+qreg_q = QuantumRegister(2, 'q')
+creg_c = ClassicalRegister(2, 'c')
+circuit = QuantumCircuit(qreg_q, creg_c)
 
-def simple_circuits_50(angle):
-    """The code you write for this challenge should be completely contained within this function
-        between the # QHACK # comment markers.
-    In this function:
-        * Create the standard Bell State
-        * Rotate the first qubit around the y-axis by angle
-        * Measure the expectation value of the tensor observable `qml.PauliZ(0) @ qml.PauliZ(1)`
-    Args:
-        angle (float): how much to rotate a state around the y-axis
-    Returns:
-        float: the expectation value of the tensor observable
-    """
+circuit.h(qreg_q[0])
+circuit.x(qreg_q[1])
+circuit.h(qreg_q[0])
+circuit.h(qreg_q[1])
+circuit.cx(qreg_q[0], qreg_q[1])
+circuit.h(qreg_q[0])
+circuit.h(qreg_q[1])
+circuit.cx(qreg_q[0], qreg_q[1])
+circuit.h(qreg_q[0])
+circuit.h(qreg_q[1])
+circuit.measure(qreg_q[0], creg_c[0])
+circuit.measure(qreg_q[1], creg_c[1])
 
-    expectation_value = 0.0
+# Shots
+simulator = qk.BasicAer.get_backend('qasm_simulator')
+circuit_input = int(input("Enter the number of shots:- "))
+# Simulating the circuit using the simulator to get the result
+job = qk.execute(circuit, simulator, shots = 1000)
+result = job.result()
 
-    # QHACK #
-
-    # Step 1 : initialize a device
-    num_wires = 2
-    dev = qml.device('default.qubit', wires=num_wires)
-
-    # Step 2 : Create a quantum circuit and qnode
-    @qml.qnode(dev)
-    def my_quantum_function(param):
-        qml.Hadamard(wires=0)# a single-wire gate.
-        qml.CNOT(wires=[0, 1])# a two-wire gate# Finally we return a measurement of an operator on a wire
-        qml.RY(angle, wires=0)# a single-wire parameterized gate.
-        return qml.expval(qml.PauliZ(0) @  qml.PauliZ(1))
-    expectation_value = my_quantum_function(0.1)
-
-    # QHACK #
-    return expectation_value
-
-
-if __name__ == "__main__":
-    # DO NOT MODIFY anything in this code block
-
-    # Load and process input
-    angle_str = sys.stdin.read()
-    angle = float(angle_str)
-
-    ans = simple_circuits_50(angle)
-
-    if isinstance(ans, np.tensor):
-        ans = ans.item()
-
-    if not isinstance(ans, float):
-        raise TypeError(
-            "the simple_circuits_50 function needs to return either a float or PennyLane tensor."
-        )
-
-    print(ans)
+# Output.
+counts = result.get_counts(circuit)
+print (counts)
